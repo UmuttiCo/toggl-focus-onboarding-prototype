@@ -1090,3 +1090,21 @@ input:focus-visible {
   .panel { display: none; }
   .content .panel.force { display: flex; position: fixed; inset: auto 0 0 0; max-height: 60vh; border-top: 1px solid var(--line); }
 }
+
+/* edit affordance on client names */
+.cf-name-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+.cf-pencil {
+  color: var(--ink-3);
+  opacity: 0;
+  transition: opacity 0.12s;
+  flex-shrink: 0;
+}
+.cf-row:hover .cf-pencil,
+.cf-name-input:focus + .cf-pencil {
+  opacity: 1;
+}

@@ -284,14 +284,19 @@ function ClientsStep({ connected, clients, setClients, projName, setProjName, on
             />
             <span className="cf-folder">{I.folder}</span>
             <span className="cf-main">
-              <input
-                className="cf-name-input"
-                value={c.label}
-                aria-label={`Project name for ${c.domain}`}
-                onChange={(e) =>
-                  setClients(clients.map((x) => (x.id === c.id ? { ...x, label: e.target.value } : x)))
-                }
-              />
+              <span className="cf-name-wrap">
+                <input
+                  className="cf-name-input"
+                  value={c.label}
+                  aria-label={`Project name for ${c.domain}`}
+                  onChange={(e) =>
+                    setClients(clients.map((x) => (x.id === c.id ? { ...x, label: e.target.value } : x)))
+                  }
+                />
+                <svg className="cf-pencil" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M17 3l4 4L8 20l-5 1 1-5L17 3z" />
+                </svg>
+              </span>
               <div className="cf-meta">
                 {c.domain} · {c.meetings} meetings · {c.hours}h · {c.cadence}
               </div>
