@@ -1108,3 +1108,15 @@ input:focus-visible {
 .cf-name-input:focus + .cf-pencil {
   opacity: 1;
 }
+
+/* planned (future) entries: on the calendar, never logged early */
+.evt.planned {
+  background: var(--card-selected);
+  border: 1.5px dashed var(--tint-border);
+  color: var(--ink);
+}
+.evt.planned .proj {
+  color: var(--magenta);
+  font-weight: 700;
+  font-size: 10.5px;
+}

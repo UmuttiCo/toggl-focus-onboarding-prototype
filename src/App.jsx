@@ -515,6 +515,7 @@ export default function App() {
   const dayHours = (di) =>
     attributed.filter((m) => m.day === di).reduce((s, m) => s + meetingHours(m), 0);
 
+
   const goDay = (target) => {
     if (target === 2 && !claimed) setClaimed(true); // the demo's "next morning" presumes yesterday was claimed
     setDay(target);
@@ -525,8 +526,8 @@ export default function App() {
   const claimAll = () => {
     setClaimed(true);
     setToast({
-      title: `${fmtHours(totalH)} logged across ${groups.filter((g) => g.kind !== "day").length || 3} projects`,
-      body: "Reports updated. Nothing was invented: every entry came from your calendar.",
+      title: `${fmtHours(loggedH)} logged · ${fmtHours(plannedH)} planned`,
+      body: "Reports updated. Nothing is logged before it happens, and nothing was invented.",
     });
   };
 
@@ -576,7 +577,20 @@ export default function App() {
 
   const isDay2 = day === 2;
   const todayIdx = isDay2 ? 1 : 0;
-  const nowHour = isDay2 ? 9.66 : 14.1;
+  const nowHour = isDay2 ? 9.66 : 17.5;
+  // Monday evening on day one; by day two, all of Monday is past.
+  const isPast = (m) =>
+    isDay2 ? m.day === 0 : m.day === 0 && m.end <= 17.5;
+  const sumH = (list) => list.reduce((s, m) => s + meetingHours(m), 0);
+  const loggedH = sumH(attributed.filter(isPast));
+  const plannedH = totalH - loggedH;
+  const dayLogged = (di) => sumH(attributed.filter((m) => m.day === di && isPast(m)));
+  const dayPlanned = (di) => dayHours(di) - dayLogged(di);
+  const loggedMoney = rate
+    ? attributed
+        .filter((m) => isPast(m) && clientById[effClient(m)]?.billable)
+        .reduce((s, m) => s + meetingHours(m), 0) * rate
+    : null;
   const monHours = dayHours(0);
   const monMoney = rate
     ? attributed
@@ -620,11 +634,12 @@ export default function App() {
             {claimed ? (
               <>
                 <span>
-                  Logged <b style={{ color: "var(--ink)" }}>{fmtHours(isDay2 ? monHours : totalH)}</b>
+                  Logged <b style={{ color: "var(--ink)" }}>{fmtHours(isDay2 ? monHours : loggedH)}</b>
+                  {" · "}Planned <b style={{ color: "var(--ink)" }}>{fmtHours(isDay2 ? totalH - monHours : plannedH)}</b>
                 </span>
-                {money !== null && (
+                {(isDay2 ? monMoney : loggedMoney) !== null && (
                   <span style={{ color: "var(--green)", fontWeight: 700 }}>
-                    ${Math.round(isDay2 ? monMoney : money).toLocaleString()}
+                    ${Math.round(isDay2 ? monMoney : loggedMoney).toLocaleString()}
                   </span>
                 )}
               </>
@@ -651,9 +666,12 @@ export default function App() {
         {!isDay2 && claimed && !stripGone && (
           <div className="strip green">
             <span>
-              <b>{fmtHours(totalH)} logged.</b> Your week now counts. Reports went from 0h to{" "}
-              {fmtHours(totalH)}
-              {money !== null && <> and ${Math.round(money).toLocaleString()}</>}.
+              <b>
+                {fmtHours(loggedH)} logged, {fmtHours(plannedH)} planned.
+              </b>{" "}
+              Reports went from 0h to {fmtHours(loggedH)}
+              {loggedMoney !== null && <> and ${Math.round(loggedMoney).toLocaleString()}</>}. The
+              rest logs itself as each meeting ends.
             </span>
             <button className="x" aria-label="Dismiss" onClick={() => setStripGone(true)}>
               ✕
@@ -706,15 +724,16 @@ export default function App() {
             <div className="grid-head">
               <span />
               {DAYS.map((d, i) => {
-                const h = claimed ? dayHours(i) : 0;
+                const lg = claimed ? dayLogged(i) : 0;
+                const pl = claimed ? dayPlanned(i) : 0;
                 return (
                   <div key={d.label} className={`day-head ${i === todayIdx ? "today" : ""}`}>
                     <span className="num">{d.date}</span>
                     <span>
                       <span className="lbl">{d.label}</span>
                       <br />
-                      <span className={`sum ${h > 0 ? "live" : ""}`}>
-                        {h > 0 ? fmtHours(h) : "–"} / –
+                      <span className={`sum ${lg + pl > 0 ? "live" : ""}`}>
+                        {lg > 0 ? fmtHours(lg) : "–"} / {pl > 0 ? fmtHours(pl) : "–"}
                       </span>
                     </span>
                   </div>
@@ -754,10 +773,11 @@ export default function App() {
                     .map((m) => {
                       const c = clientById[effClient(m)];
                       const isClaimed = claimed && c && c.enabled;
+                      const cls = !isClaimed ? "gcal" : isPast(m) ? "claimed" : "planned";
                       return (
                         <div
                           key={m.id}
-                          className={`evt ${isClaimed ? "claimed" : "gcal"}`}
+                          className={`evt ${cls}`}
                           style={{
                             top: `${((m.start - GRID_START) / GRID_SPAN) * 100}%`,
                             height: `${(meetingHours(m) / GRID_SPAN) * 100}%`,
@@ -782,10 +802,11 @@ export default function App() {
                 <>
                   <div className="panel-head">
                     <span className="small-label">This week</span>
-                    <h3>Log your week</h3>
+                    <h3>Log and plan your week</h3>
                     <p>
                       {liveMeetings.length} meetings from your calendar, grouped by{" "}
-                      {useCase === "plan" ? "day" : "client"}. Review, then log it in one go.
+                      {useCase === "plan" ? "day" : "client"}. What already happened gets logged.
+                      The rest is planned, never logged early.
                     </p>
                   </div>
                   <div className="panel-body">
@@ -900,10 +921,15 @@ export default function App() {
                   {attributed.length > 0 && (
                     <div className="panel-foot">
                       <button className="claim-btn" onClick={claimAll}>
-                        Log {fmtHours(totalH)}
+                        {loggedH > 0 && plannedH > 0
+                          ? `Log ${fmtHours(loggedH)} · Plan ${fmtHours(plannedH)}`
+                          : loggedH > 0
+                            ? `Log ${fmtHours(loggedH)}`
+                            : `Plan ${fmtHours(plannedH)}`}
                       </button>
                       <p className="note">
-                        Only this week becomes entries. History was just how we learned.
+                        Nothing is logged before it happens. With auto-track on, each planned
+                        meeting logs itself when it ends.
                       </p>
                     </div>
                   )}
@@ -911,14 +937,15 @@ export default function App() {
               ) : (
                 <>
                   <div className="panel-head">
-                    <span className="small-label">Logged</span>
+                    <span className="small-label">Logged + planned</span>
                     <h3>Your week now counts</h3>
                   </div>
                   <div className="panel-body">
                     <div className="sumcard">
-                      <div className="big">{fmtHours(totalH)}</div>
+                      <div className="big">{fmtHours(loggedH)}</div>
                       <div className="sub">
-                        logged across{" "}
+                        logged so far · {fmtHours(plannedH)} planned for the rest of the week,
+                        across{" "}
                         {activeClients.filter((c) => attributed.some((m) => effClient(m) === c.id)).length}{" "}
                         projects
                       </div>
@@ -987,7 +1014,11 @@ export default function App() {
                           ${Math.round(money).toLocaleString()}
                         </div>
                         <div className="sub">
-                          {fmtHours(billableH)} billable at ${rate}/h. Press D to see tomorrow.
+                          on pace this week: {fmtHours(billableH)} billable at ${rate}/h
+                          {loggedMoney > 0 && (
+                            <>, ${Math.round(loggedMoney).toLocaleString()} of it already logged</>
+                          )}
+                          . Press D to see tomorrow.
                         </div>
                       </div>
                     )}
