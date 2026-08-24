@@ -361,6 +361,30 @@ input:focus-visible {
 .cf-row.off {
   opacity: 0.55;
 }
+.cf-check {
+  appearance: none;
+  width: 19px;
+  height: 19px;
+  border: 2px solid var(--ink-3);
+  border-radius: 5px;
+  flex-shrink: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  margin: 0;
+}
+.cf-check:checked {
+  background: var(--magenta);
+  border-color: var(--magenta);
+}
+.cf-check:checked::after {
+  content: "";
+  width: 10px;
+  height: 6px;
+  border-left: 2.4px solid #fff;
+  border-bottom: 2.4px solid #fff;
+  transform: rotate(-45deg) translateY(-1px);
+}
 .cf-folder {
   color: var(--green);
   flex-shrink: 0;

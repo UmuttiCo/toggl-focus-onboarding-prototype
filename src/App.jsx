@@ -273,6 +273,15 @@ function ClientsStep({ connected, clients, setClients, projName, setProjName, on
         </p>
         {clients.map((c) => (
           <div key={c.id} className={`cf-row ${c.enabled ? "" : "off"}`}>
+            <input
+              type="checkbox"
+              className="cf-check"
+              checked={c.enabled}
+              aria-label={`Create a project for ${c.label}`}
+              onChange={() =>
+                setClients(clients.map((x) => (x.id === c.id ? { ...x, enabled: !x.enabled } : x)))
+              }
+            />
             <span className="cf-folder">{I.folder}</span>
             <span className="cf-main">
               <input
@@ -288,18 +297,14 @@ function ClientsStep({ connected, clients, setClients, projName, setProjName, on
               </div>
             </span>
             {c.billable ? (
-              <span className="cf-tag">billable</span>
+              <span className="cf-tag" title="Meetings with this client will count as billable time">
+                $ billable
+              </span>
             ) : (
-              <span className="cf-tag muted">internal</span>
+              <span className="cf-tag muted" title="Tracked, but never counts toward billing">
+                not billed
+              </span>
             )}
-            <button
-              className="cf-toggle"
-              onClick={() =>
-                setClients(clients.map((x) => (x.id === c.id ? { ...x, enabled: !x.enabled } : x)))
-              }
-            >
-              {c.enabled ? "Skip" : "Add"}
-            </button>
           </div>
         ))}
         <p className="cf-note">Guessed from attendee domains and recurring titles. Edit anything.</p>
