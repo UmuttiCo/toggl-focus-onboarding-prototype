@@ -525,7 +525,7 @@ export default function App() {
   const claimAll = () => {
     setClaimed(true);
     setToast({
-      title: `${fmtHours(totalH)} claimed across ${groups.filter((g) => g.kind !== "day").length || 3} projects`,
+      title: `${fmtHours(totalH)} logged across ${groups.filter((g) => g.kind !== "day").length || 3} projects`,
       body: "Reports updated. Nothing was invented: every entry came from your calendar.",
     });
   };
@@ -651,7 +651,7 @@ export default function App() {
         {!isDay2 && claimed && !stripGone && (
           <div className="strip green">
             <span>
-              <b>{fmtHours(totalH)} claimed.</b> Your week now counts. Reports went from 0h to{" "}
+              <b>{fmtHours(totalH)} logged.</b> Your week now counts. Reports went from 0h to{" "}
               {fmtHours(totalH)}
               {money !== null && <> and ${Math.round(money).toLocaleString()}</>}.
             </span>
@@ -664,7 +664,7 @@ export default function App() {
           <div className="strip">
             <span>
               <b>We added a sample task so you can try tracking.</b> Add your own any time, or
-              connect your calendar to claim your real week.
+              connect your calendar to log your real week.
             </span>
             <button className="x" aria-label="Dismiss" onClick={() => setStripGone(true)}>
               ✕
@@ -782,16 +782,16 @@ export default function App() {
                 <>
                   <div className="panel-head">
                     <span className="small-label">This week</span>
-                    <h3>Claim your week</h3>
+                    <h3>Log your week</h3>
                     <p>
                       {liveMeetings.length} meetings from your calendar, grouped by{" "}
-                      {useCase === "plan" ? "day" : "client"}. Review, then claim in one go.
+                      {useCase === "plan" ? "day" : "client"}. Review, then log it in one go.
                     </p>
                   </div>
                   <div className="panel-body">
                     {groups.length === 0 && unmatched.length === 0 ? (
                       <div className="empty-claim">
-                        <b>Nothing to claim</b>
+                        <b>Nothing left to log</b>
                         You dismissed everything. Track your first entry with the timer above, or
                         press D to see day two.
                       </div>
@@ -900,7 +900,7 @@ export default function App() {
                   {attributed.length > 0 && (
                     <div className="panel-foot">
                       <button className="claim-btn" onClick={claimAll}>
-                        Claim {fmtHours(totalH)}
+                        Log {fmtHours(totalH)}
                       </button>
                       <p className="note">
                         Only this week becomes entries. History was just how we learned.
@@ -911,14 +911,14 @@ export default function App() {
               ) : (
                 <>
                   <div className="panel-head">
-                    <span className="small-label">Claimed</span>
+                    <span className="small-label">Logged</span>
                     <h3>Your week now counts</h3>
                   </div>
                   <div className="panel-body">
                     <div className="sumcard">
                       <div className="big">{fmtHours(totalH)}</div>
                       <div className="sub">
-                        claimed across{" "}
+                        logged across{" "}
                         {activeClients.filter((c) => attributed.some((m) => effClient(m) === c.id)).length}{" "}
                         projects
                       </div>
