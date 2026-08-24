@@ -28,7 +28,7 @@ export const HISTORY_CLIENTS = [
   {
     id: "acme",
     label: "Acme",
-    domain: "acme.co",
+    domain: "@acme.co",
     meetings: 47,
     hours: 62,
     cadence: "weekly, Tue + Thu",
@@ -38,7 +38,7 @@ export const HISTORY_CLIENTS = [
   {
     id: "lumen",
     label: "Lumen Studio",
-    domain: "lumen.studio",
+    domain: "@lumen.studio",
     meetings: 18,
     hours: 21,
     cadence: "fortnightly",
@@ -58,7 +58,7 @@ export const HISTORY_CLIENTS = [
   {
     id: "north",
     label: "Studio North",
-    domain: "studio-north.com",
+    domain: "@studio-north.com",
     meetings: 4,
     hours: 5,
     cadence: "last seen in June",
