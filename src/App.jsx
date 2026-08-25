@@ -234,6 +234,7 @@ function CalendarStep({ state, onConnect, onBack, onSkip, onNext }) {
 /* ---------- step 3: clients found (or typed project on skip path) ---------- */
 
 function ClientsStep({ connected, clients, setClients, projName, setProjName, onBack, onNext }) {
+  const [expanded, setExpanded] = useState(null);
   if (!connected) {
     return (
       <ObPage>
@@ -263,59 +264,180 @@ function ClientsStep({ connected, clients, setClients, projName, setProjName, on
   }
 
   const active = clients.filter((c) => c.enabled).length;
+  const taskCount = clients.filter((c) => c.enabled).reduce((s, c) => s + c.tasks.length, 0);
+  const upd = (id, fn) => setClients(clients.map((x) => (x.id === id ? fn(x) : x)));
+
+  const moveTask = (fromId, taskId, toId) => {
+    if (!toId || toId === fromId) return;
+    const from = clients.find((c) => c.id === fromId);
+    const task = from.tasks.find((t) => t.id === taskId);
+    setClients(
+      clients.map((c) => {
+        if (c.id === fromId) return { ...c, tasks: c.tasks.filter((t) => t.id !== taskId) };
+        if (c.id === toId) return { ...c, tasks: [...c.tasks, task] };
+        return c;
+      })
+    );
+  };
+
+  const mergeInto = (fromId, toId) => {
+    if (!toId || toId === fromId) return;
+    const from = clients.find((c) => c.id === fromId);
+    setClients(
+      clients
+        .filter((c) => c.id !== fromId)
+        .map((c) =>
+          c.id === toId
+            ? {
+                ...c,
+                tasks: [...c.tasks, ...from.tasks],
+                meetings: c.meetings + from.meetings,
+                hours: c.hours + from.hours,
+              }
+            : c
+        )
+    );
+    if (expanded === fromId) setExpanded(null);
+  };
+
   return (
     <ObPage>
       <ObCard step={3} onBack={onBack}>
         <h1>We found your clients</h1>
         <p className="cf-intro">
-          From 3 months of your calendar. Confirm them and your projects are ready.
-          Nothing from the past becomes a time entry.
+          From 3 months of your calendar. Confirm them and your workspace is ready: clients,
+          projects, and tasks from your recurring meetings. Nothing from the past becomes a time
+          entry.
         </p>
         {clients.map((c) => (
-          <div key={c.id} className={`cf-row ${c.enabled ? "" : "off"}`}>
-            <input
-              type="checkbox"
-              className="cf-check"
-              checked={c.enabled}
-              aria-label={`Create a project for ${c.label}`}
-              onChange={() =>
-                setClients(clients.map((x) => (x.id === c.id ? { ...x, enabled: !x.enabled } : x)))
-              }
-            />
-            <span className="cf-folder">{I.folder}</span>
-            <span className="cf-main">
-              <span className="cf-name-wrap">
-                <input
-                  className="cf-name-input"
-                  value={c.label}
-                  aria-label={`Project name for ${c.domain}`}
-                  onChange={(e) =>
-                    setClients(clients.map((x) => (x.id === c.id ? { ...x, label: e.target.value } : x)))
-                  }
-                />
-                <svg className="cf-pencil" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <path d="M17 3l4 4L8 20l-5 1 1-5L17 3z" />
-                </svg>
+          <div key={c.id} className={`cf-block ${c.enabled ? "" : "off"}`}>
+            <div className="cf-row">
+              <input
+                type="checkbox"
+                className="cf-check"
+                checked={c.enabled}
+                aria-label={`Create a project for ${c.label}`}
+                onChange={() => upd(c.id, (x) => ({ ...x, enabled: !x.enabled }))}
+              />
+              <span className="cf-folder">{I.folder}</span>
+              <span className="cf-main">
+                <span className="cf-name-wrap">
+                  <input
+                    className="cf-name-input"
+                    value={c.label}
+                    aria-label={`Project name for ${c.domain}`}
+                    onChange={(e) => upd(c.id, (x) => ({ ...x, label: e.target.value }))}
+                  />
+                  <svg className="cf-pencil" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M17 3l4 4L8 20l-5 1 1-5L17 3z" />
+                  </svg>
+                </span>
+                <div className="cf-meta">
+                  {c.domain} · {c.meetings} meetings · {c.hours}h · {c.cadence}
+                </div>
               </span>
-              <div className="cf-meta">
-                {c.domain} · {c.meetings} meetings · {c.hours}h · {c.cadence}
+              {c.billable ? (
+                <span className="cf-tag" title="Meetings with this client will count as billable time">
+                  $ billable
+                </span>
+              ) : (
+                <span className="cf-tag muted" title="Tracked, but never counts toward billing">
+                  not billed
+                </span>
+              )}
+              <button
+                className={`cf-chevron ${expanded === c.id ? "open" : ""}`}
+                aria-label={`${expanded === c.id ? "Hide" : "Show"} tasks for ${c.label}`}
+                aria-expanded={expanded === c.id}
+                onClick={() => setExpanded(expanded === c.id ? null : c.id)}
+              >
+                {I.chevD}
+              </button>
+            </div>
+            {expanded === c.id && (
+              <div className="cf-expand">
+                <div className="small-label" style={{ marginBottom: 6 }}>
+                  Tasks · from recurring meetings
+                </div>
+                {c.tasks.map((t) => (
+                  <div key={t.id} className="task-row">
+                    <input
+                      className="task-name-input"
+                      value={t.name}
+                      aria-label="Task name"
+                      onChange={(e) =>
+                        upd(c.id, (x) => ({
+                          ...x,
+                          tasks: x.tasks.map((y) => (y.id === t.id ? { ...y, name: e.target.value } : y)),
+                        }))
+                      }
+                    />
+                    <span className="task-meta">{t.cadence}</span>
+                    <select
+                      className="task-move"
+                      value=""
+                      aria-label={`Move ${t.name} to another project`}
+                      onChange={(e) => moveTask(c.id, t.id, e.target.value)}
+                    >
+                      <option value="">Move to…</option>
+                      {clients
+                        .filter((o) => o.id !== c.id && o.enabled)
+                        .map((o) => (
+                          <option key={o.id} value={o.id}>
+                            {o.label}
+                          </option>
+                        ))}
+                    </select>
+                    <button
+                      className="task-rm"
+                      aria-label={`Remove task ${t.name}`}
+                      onClick={() =>
+                        upd(c.id, (x) => ({ ...x, tasks: x.tasks.filter((y) => y.id !== t.id) }))
+                      }
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                <div className="cf-expand-foot">
+                  <button
+                    className="cf-addtask"
+                    onClick={() =>
+                      upd(c.id, (x) => ({
+                        ...x,
+                        tasks: [
+                          ...x.tasks,
+                          { id: "nt" + Math.random().toString(36).slice(2, 7), name: "New task", cadence: "added by you" },
+                        ],
+                      }))
+                    }
+                  >
+                    + Add task
+                  </button>
+                  <select
+                    className="task-move"
+                    value=""
+                    aria-label={`Merge ${c.label} into another client`}
+                    onChange={(e) => mergeInto(c.id, e.target.value)}
+                  >
+                    <option value="">Merge into…</option>
+                    {clients
+                      .filter((o) => o.id !== c.id)
+                      .map((o) => (
+                        <option key={o.id} value={o.id}>
+                          {o.label}
+                        </option>
+                      ))}
+                  </select>
+                </div>
               </div>
-            </span>
-            {c.billable ? (
-              <span className="cf-tag" title="Meetings with this client will count as billable time">
-                $ billable
-              </span>
-            ) : (
-              <span className="cf-tag muted" title="Tracked, but never counts toward billing">
-                not billed
-              </span>
             )}
           </div>
         ))}
         <p className="cf-note">Guessed from attendee domains and recurring titles. Edit anything.</p>
         <div className="ob-actions">
           <button className="btn-primary" disabled={active === 0} onClick={onNext}>
-            Create {active} {active === 1 ? "project" : "projects"} →
+            Create {active} {active === 1 ? "client" : "clients"} · {taskCount} tasks →
           </button>
         </div>
       </ObCard>

@@ -34,6 +34,12 @@ export const HISTORY_CLIENTS = [
     cadence: "weekly, Tue + Thu",
     billable: true,
     dormant: false,
+    tasks: [
+      { id: "t1", name: "Standup", cadence: "weekly, Tue + Thu" },
+      { id: "t2", name: "Design review", cadence: "weekly" },
+      { id: "t3", name: "Sprint planning", cadence: "fortnightly" },
+      { id: "t4", name: "Workshop", cadence: "one-off" },
+    ],
   },
   {
     id: "lumen",
@@ -44,6 +50,11 @@ export const HISTORY_CLIENTS = [
     cadence: "fortnightly",
     billable: true,
     dormant: false,
+    tasks: [
+      { id: "t5", name: "Homepage feedback", cadence: "weekly" },
+      { id: "t6", name: "Brand sync", cadence: "fortnightly" },
+      { id: "t7", name: "Review", cadence: "fortnightly" },
+    ],
   },
   {
     id: "internal",
@@ -54,6 +65,11 @@ export const HISTORY_CLIENTS = [
     cadence: "weekly",
     billable: false,
     dormant: false,
+    tasks: [
+      { id: "t8", name: "1:1 with Deniz", cadence: "weekly" },
+      { id: "t9", name: "Weekly planning", cadence: "weekly" },
+      { id: "t10", name: "Bookkeeping", cadence: "weekly" },
+    ],
   },
   {
     id: "north",
@@ -64,6 +80,7 @@ export const HISTORY_CLIENTS = [
     cadence: "last seen in June",
     billable: true,
     dormant: true,
+    tasks: [{ id: "t11", name: "Check-in", cadence: "last seen in June" }],
   },
 ];
 
