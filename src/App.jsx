@@ -880,9 +880,15 @@ export default function App() {
                       style={{ top: `${((nowHour - GRID_START) / GRID_SPAN) * 100}%` }}
                     />
                   )}
+                  {di === todayIdx && (
+                    <div className="lane-labels">
+                      <span>Logged</span>
+                      <span>Planned</span>
+                    </div>
+                  )}
                   {!connected && di === 0 && (
                     <div
-                      className="evt claimed"
+                      className="evt claimed lane-plan"
                       style={{ top: "18.2%", height: "13.6%" }}
                     >
                       <b>{projName || "Sample task"}</b>
@@ -894,11 +900,12 @@ export default function App() {
                     .map((m) => {
                       const c = clientById[effClient(m)];
                       const isClaimed = claimed && c && c.enabled;
-                      const cls = !isClaimed ? "gcal" : isPast(m) ? "claimed" : "planned";
+                      const logged = isClaimed && isPast(m);
+                      const cls = !isClaimed ? "gcal" : logged ? "claimed" : "planned";
                       return (
                         <div
                           key={m.id}
-                          className={`evt ${cls}`}
+                          className={`evt ${cls} ${logged ? "lane-log" : "lane-plan"}`}
                           style={{
                             top: `${((m.start - GRID_START) / GRID_SPAN) * 100}%`,
                             height: `${(meetingHours(m) / GRID_SPAN) * 100}%`,
