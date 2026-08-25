@@ -540,7 +540,7 @@ export default function App() {
 
   // app state
   const [day, setDay] = useState(1);
-  const [claimed, setClaimed] = useState(false);
+  const [weekLogged, setWeekLogged] = useState(false);
   const [dismissed, setDismissed] = useState([]);
   const [overrides, setOverrides] = useState({});
   const [rate, setRate] = useState(null);
@@ -632,7 +632,7 @@ export default function App() {
 
 
   const goDay = (target) => {
-    if (target === 2 && !claimed) setClaimed(true); // the demo's "next morning" presumes yesterday was claimed
+    if (target === 2 && !weekLogged) setWeekLogged(true); // the demo's "next morning" presumes yesterday was logged
     setDay(target);
   };
 
@@ -650,8 +650,8 @@ export default function App() {
     setNewProjFor(null);
   };
 
-  const claimAll = () => {
-    setClaimed(true);
+  const logWeek = () => {
+    setWeekLogged(true);
     setToast({
       title: `${fmtHours(loggedH)} logged · ${fmtHours(plannedH)} planned`,
       body: "Reports updated. Nothing is logged before it happens, and nothing was invented.",
@@ -752,7 +752,7 @@ export default function App() {
             {I.chevL} This week <span>· W35</span>
           </div>
           <div className="right">
-            {claimed ? (
+            {weekLogged ? (
               <>
                 <span>
                   Logged <b style={{ color: "var(--ink)" }}>{fmtHours(isDay2 ? monHours : loggedH)}</b>
@@ -772,7 +772,7 @@ export default function App() {
         </div>
 
         {/* strips */}
-        {!isDay2 && !stripGone && connected && !claimed && (
+        {!isDay2 && !stripGone && connected && !weekLogged && (
           <div className="strip">
             <span>
               <b>We found {liveMeetings.length} meetings on your calendar this week,</b>{" "}
@@ -784,7 +784,7 @@ export default function App() {
             </button>
           </div>
         )}
-        {!isDay2 && claimed && !stripGone && (
+        {!isDay2 && weekLogged && !stripGone && (
           <div className="strip green">
             <span>
               <b>
@@ -845,8 +845,8 @@ export default function App() {
             <div className="grid-head">
               <span />
               {DAYS.map((d, i) => {
-                const lg = claimed ? dayLogged(i) : 0;
-                const pl = claimed ? dayPlanned(i) : 0;
+                const lg = weekLogged ? dayLogged(i) : 0;
+                const pl = weekLogged ? dayPlanned(i) : 0;
                 return (
                   <div key={d.label} className={`day-head ${i === todayIdx ? "today" : ""}`}>
                     <span className="num">{d.date}</span>
@@ -888,7 +888,7 @@ export default function App() {
                   )}
                   {!connected && di === 0 && (
                     <div
-                      className="evt claimed lane-plan"
+                      className="evt logged lane-plan"
                       style={{ top: "18.2%", height: "13.6%" }}
                     >
                       <b>{projName || "Sample task"}</b>
@@ -899,9 +899,9 @@ export default function App() {
                     .filter((m) => m.day === di)
                     .map((m) => {
                       const c = clientById[effClient(m)];
-                      const isClaimed = claimed && c && c.enabled;
-                      const logged = isClaimed && isPast(m);
-                      const cls = !isClaimed ? "gcal" : logged ? "claimed" : "planned";
+                      const counted = weekLogged && c && c.enabled;
+                      const logged = counted && isPast(m);
+                      const cls = !counted ? "gcal" : logged ? "logged" : "planned";
                       return (
                         <div
                           key={m.id}
@@ -911,9 +911,9 @@ export default function App() {
                             height: `${(meetingHours(m) / GRID_SPAN) * 100}%`,
                           }}
                         >
-                          {!isClaimed && I.g}
+                          {!counted && I.g}
                           <b>{m.title}</b>
-                          {isClaimed && <span className="proj">{c.label}</span>}
+                          {counted && <span className="proj">{c.label}</span>}
                           <span className="dur">{fmtHours(meetingHours(m))}</span>
                         </div>
                       );
@@ -923,10 +923,10 @@ export default function App() {
             </div>
           </div>
 
-          {/* claim panel */}
+          {/* log panel */}
           {showPanel && (
             <div className="panel">
-              {!claimed ? (
+              {!weekLogged ? (
                 <>
                   <div className="panel-head">
                     <span className="small-label">This week</span>
@@ -949,7 +949,7 @@ export default function App() {
                       </span>
                     </div>
                     {groups.length === 0 && unmatched.length === 0 ? (
-                      <div className="empty-claim">
+                      <div className="empty-log">
                         <b>Nothing left to log</b>
                         You dismissed everything. Track your first entry with the timer above, or
                         press D to see day two.
@@ -1109,7 +1109,7 @@ export default function App() {
                   </div>
                   {attributed.length > 0 && (
                     <div className="panel-foot">
-                      <button className="claim-btn" onClick={claimAll}>
+                      <button className="log-btn" onClick={logWeek}>
                         {loggedH > 0 && plannedH > 0
                           ? `Log ${fmtHours(loggedH)} · Plan ${fmtHours(plannedH)}`
                           : loggedH > 0

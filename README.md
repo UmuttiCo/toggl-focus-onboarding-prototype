@@ -2,17 +2,17 @@
 
 A redesign of the Toggl Focus first-run experience, built for a product case study.
 
-The idea in one line: Toggl Focus already imports your calendar, so onboarding should end with a claimed, attributed week instead of an empty grid.
+The idea in one line: Toggl Focus already imports your calendar, so onboarding should end with a logged and planned week, with every entry attributed to a client, instead of an unlogged grid.
 
 ## What it shows
 
 1. The three onboarding questions, kept as they are in the live product, but every answer now does something.
 2. The blank "create your first project" box is replaced by client suggestions derived from 3 months of calendar history.
-3. The landing screen is a claim screen: this week's imported meetings grouped by client, claimed in one action.
-4. The hourly rate is asked after the claim, when the value is visible. Skipping it keeps the week as a clean record (the contractor path). Filling it prices the week (the freelancer path).
-5. A day-two view, reachable with the pill at the bottom left or the D key, shows why the user comes back: yesterday's number and today's unclaimed meetings.
+3. The landing screen logs and plans the week: this week's imported meetings grouped by client, handled in one action. Past meetings are logged, future ones are planned.
+4. The hourly rate is asked after the first hours are logged, when the value is visible. Skipping it keeps the week as a clean record (the contractor path). Filling it prices the week (the freelancer path).
+5. A day-two view, reachable with the pill at the bottom left or the D key, shows why the user comes back: yesterday's number and today's planned meetings.
 
-One rule holds the design together: history is what we learn from, this week is what you claim. Nothing from the past becomes a time entry.
+One rule holds the design together: history is only used to build the structure, and only this week gets logged or planned. Nothing from the past becomes a time entry, and nothing in the future is logged early.
 
 ## Run it
 

@@ -664,7 +664,7 @@ input:focus-visible {
   font-weight: 600;
 }
 
-/* claim strip */
+/* status strip */
 .strip {
   display: flex;
   align-items: center;
@@ -800,12 +800,12 @@ input:focus-visible {
   font-weight: 800;
   font-size: 10px;
 }
-.evt.claimed {
+.evt.logged {
   background: var(--tint);
   border-color: var(--tint-border);
   color: var(--ink);
 }
-.evt.claimed .proj {
+.evt.logged .proj {
   color: var(--magenta);
   font-weight: 700;
   font-size: 10.5px;
@@ -831,7 +831,7 @@ input:focus-visible {
   background: var(--magenta);
 }
 
-/* claim panel */
+/* log panel */
 .panel {
   border-left: 1px solid var(--line);
   background: var(--surface);
@@ -923,7 +923,7 @@ input:focus-visible {
   bottom: 0;
   background: var(--surface);
 }
-.claim-btn {
+.log-btn {
   width: 100%;
   background: var(--magenta);
   color: #fff;
@@ -932,7 +932,7 @@ input:focus-visible {
   padding: 12px;
   border-radius: 9px;
 }
-.claim-btn:hover { filter: brightness(1.08); }
+.log-btn:hover { filter: brightness(1.08); }
 .panel-foot .note {
   text-align: center;
   font-size: 11.5px;
@@ -940,7 +940,7 @@ input:focus-visible {
   margin: 8px 0 0;
 }
 
-/* claimed summary + rate */
+/* logged summary + rate */
 .sumcard {
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -993,14 +993,14 @@ input:focus-visible {
   color: var(--ink-2);
 }
 
-/* empty claim state */
-.empty-claim {
+/* empty log state */
+.empty-log {
   text-align: center;
   padding: 40px 20px;
   color: var(--ink-2);
   font-size: 13.5px;
 }
-.empty-claim b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 6px; }
+.empty-log b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 6px; }
 
 /* day two */
 .d2strip {

@@ -1,6 +1,6 @@
 // Mock data. All names fictional.
-// The rule the whole design follows: history is what we learn from,
-// this week is what you claim. History never becomes time entries.
+// The rule the whole design follows: history only builds the structure,
+// this week is what gets logged and planned. History never becomes time entries.
 
 export const USE_CASES = [
   {
