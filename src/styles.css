@@ -1120,3 +1120,38 @@ input:focus-visible {
   font-weight: 700;
   font-size: 10.5px;
 }
+
+/* logged/planned legend */
+.legend {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--line);
+  background: var(--canvas);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.lg-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lg-row b {
+  color: var(--ink);
+}
+.lg-swatch {
+  width: 22px;
+  height: 12px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.lg-swatch.logged {
+  background: var(--tint);
+  border: 1px solid var(--tint-border);
+}
+.lg-swatch.planned {
+  background: var(--card-selected);
+  border: 1.5px dashed var(--tint-border);
+}

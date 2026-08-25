@@ -810,6 +810,16 @@ export default function App() {
                     </p>
                   </div>
                   <div className="panel-body">
+                    <div className="legend">
+                      <span className="lg-row">
+                        <i className="lg-swatch logged" />
+                        <b>Logged</b> counts in reports and billing
+                      </span>
+                      <span className="lg-row">
+                        <i className="lg-swatch planned" />
+                        <b>Planned</b> logs itself when the meeting ends
+                      </span>
+                    </div>
                     {groups.length === 0 && unmatched.length === 0 ? (
                       <div className="empty-claim">
                         <b>Nothing left to log</b>
