@@ -486,15 +486,6 @@ export default function App() {
   const unmatched = liveMeetings.filter((m) => !attributed.includes(m));
 
   const groups = useMemo(() => {
-    const mode = useCase === "plan" ? "day" : "client"; // "projects" groups by client too, labels differ
-    if (mode === "day") {
-      return DAYS.map((d, i) => ({
-        key: `day-${i}`,
-        name: `${d.label} ${d.date}`,
-        kind: "day",
-        meetings: attributed.filter((m) => m.day === i),
-      })).filter((g) => g.meetings.length > 0);
-    }
     return activeClients
       .map((c) => ({
         key: c.id,
@@ -503,7 +494,7 @@ export default function App() {
         meetings: attributed.filter((m) => effClient(m) === c.id),
       }))
       .filter((g) => g.meetings.length > 0);
-  }, [attributed, activeClients, useCase, overrides]);
+  }, [attributed, activeClients, overrides]);
 
   const totalH = attributed.reduce((s, m) => s + meetingHours(m), 0);
   const billableH = attributed.reduce((s, m) => {
@@ -530,12 +521,6 @@ export default function App() {
       body: "Reports updated. Nothing is logged before it happens, and nothing was invented.",
     });
   };
-
-  const claimHeadline = {
-    track: "You said you want to see where time goes.",
-    plan: "You said you want to plan and assign work.",
-    projects: "You said you want to keep projects on track.",
-  }[useCase] || "Your week is here.";
 
   /* ----- onboarding flow ----- */
   if (step === "usecase")
@@ -654,9 +639,9 @@ export default function App() {
         {!isDay2 && !stripGone && connected && !claimed && (
           <div className="strip">
             <span>
-              <b>{claimHeadline}</b> We found {liveMeetings.length} meetings this week,{" "}
-              {fmtHours(liveMeetings.reduce((s, m) => s + meetingHours(m), 0))}. None of it is
-              tracked yet.
+              <b>We found {liveMeetings.length} meetings on your calendar this week,</b>{" "}
+              {fmtHours(liveMeetings.reduce((s, m) => s + meetingHours(m), 0))} in total. None of
+              it is logged yet.
             </span>
             <button className="x" aria-label="Dismiss" onClick={() => setStripGone(true)}>
               ✕
@@ -804,8 +789,8 @@ export default function App() {
                     <span className="small-label">This week</span>
                     <h3>Log and plan your week</h3>
                     <p>
-                      {liveMeetings.length} meetings from your calendar, grouped by{" "}
-                      {useCase === "plan" ? "day" : "client"}. What already happened gets logged.
+                      {liveMeetings.length} meetings from your calendar, grouped by client.
+                      What already happened gets logged.
                       The rest is planned, never logged early.
                     </p>
                   </div>
