@@ -1155,3 +1155,31 @@ input:focus-visible {
   background: var(--card-selected);
   border: 1.5px dashed var(--tint-border);
 }
+
+/* inline new-project creation in assign rows */
+.newproj {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.newproj-input {
+  width: 120px;
+  border: 1px solid var(--magenta);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+.newproj-input:focus {
+  outline: none;
+}
+.newproj-ok {
+  background: var(--magenta);
+  color: #fff;
+  font-weight: 700;
+  font-size: 11.5px;
+  padding: 5px 10px;
+  border-radius: 6px;
+}
+.newproj-ok:disabled {
+  background: var(--magenta-disabled);
+}

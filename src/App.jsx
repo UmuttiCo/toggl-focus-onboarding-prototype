@@ -427,6 +427,8 @@ export default function App() {
   const [stripGone, setStripGone] = useState(false);
   const [expanded, setExpanded] = useState(null);
   const [toast, setToast] = useState(null);
+  const [newProjFor, setNewProjFor] = useState(null);
+  const [newProjName, setNewProjName] = useState("");
   const [timerOn, setTimerOn] = useState(false);
   const [timerSec, setTimerSec] = useState(0);
   const timerRef = useRef(null);
@@ -513,6 +515,18 @@ export default function App() {
   };
 
   setDayViaDemoRef.current = () => goDay(day === 1 ? 2 : 1);
+
+  const confirmNewProj = (mid) => {
+    const name = newProjName.trim();
+    if (!name) return;
+    const id = "np" + Math.random().toString(36).slice(2, 7);
+    setClients([
+      ...clients,
+      { id, label: name, domain: "added by you", meetings: 0, hours: 0, cadence: "", billable: true, dormant: false, enabled: true },
+    ]);
+    setOverrides({ ...overrides, [mid]: id });
+    setNewProjFor(null);
+  };
 
   const claimAll = () => {
     setClaimed(true);
@@ -833,20 +847,46 @@ export default function App() {
                                   <div key={m.id} className="mrow">
                                     <span className="t">{m.title}</span>
                                     <span className="d">{fmtHours(meetingHours(m))}</span>
+                                    {newProjFor === m.id ? (
+                                      <span className="newproj">
+                                        <input
+                                          className="newproj-input"
+                                          autoFocus
+                                          placeholder="New project name"
+                                          value={newProjName}
+                                          onChange={(e) => setNewProjName(e.target.value)}
+                                          onKeyDown={(e) => e.key === "Enter" && confirmNewProj(m.id)}
+                                        />
+                                        <button
+                                          className="newproj-ok"
+                                          disabled={!newProjName.trim()}
+                                          onClick={() => confirmNewProj(m.id)}
+                                        >
+                                          Add
+                                        </button>
+                                      </span>
+                                    ) : (
                                     <select
                                       value={effClient(m) || ""}
                                       aria-label="Assign client"
-                                      onChange={(e) =>
-                                        setOverrides({ ...overrides, [m.id]: e.target.value || null })
-                                      }
+                                      onChange={(e) => {
+                                        if (e.target.value === "__new") {
+                                          setNewProjFor(m.id);
+                                          setNewProjName("");
+                                        } else {
+                                          setOverrides({ ...overrides, [m.id]: e.target.value || null });
+                                        }
+                                      }}
                                     >
                                       {activeClients.map((c) => (
                                         <option key={c.id} value={c.id}>
                                           {c.label}
                                         </option>
                                       ))}
+                                      <option value="__new">+ New project…</option>
                                       <option value="">Unassigned</option>
                                     </select>
+                                    )}
                                     <button
                                       className="rm"
                                       aria-label="Dismiss meeting"
@@ -882,13 +922,36 @@ export default function App() {
                                   <div key={m.id} className="mrow">
                                     <span className="t">{m.title}</span>
                                     <span className="d">{fmtHours(meetingHours(m))}</span>
+                                    {newProjFor === m.id ? (
+                                      <span className="newproj">
+                                        <input
+                                          className="newproj-input"
+                                          autoFocus
+                                          placeholder="New project name"
+                                          value={newProjName}
+                                          onChange={(e) => setNewProjName(e.target.value)}
+                                          onKeyDown={(e) => e.key === "Enter" && confirmNewProj(m.id)}
+                                        />
+                                        <button
+                                          className="newproj-ok"
+                                          disabled={!newProjName.trim()}
+                                          onClick={() => confirmNewProj(m.id)}
+                                        >
+                                          Add
+                                        </button>
+                                      </span>
+                                    ) : (
                                     <select
                                       value=""
                                       aria-label="Assign client"
-                                      onChange={(e) =>
-                                        e.target.value &&
-                                        setOverrides({ ...overrides, [m.id]: e.target.value })
-                                      }
+                                      onChange={(e) => {
+                                        if (e.target.value === "__new") {
+                                          setNewProjFor(m.id);
+                                          setNewProjName("");
+                                        } else if (e.target.value) {
+                                          setOverrides({ ...overrides, [m.id]: e.target.value });
+                                        }
+                                      }}
                                     >
                                       <option value="">Assign…</option>
                                       {activeClients.map((c) => (
@@ -896,7 +959,9 @@ export default function App() {
                                           {c.label}
                                         </option>
                                       ))}
+                                      <option value="__new">+ New project…</option>
                                     </select>
+                                    )}
                                     <button
                                       className="rm"
                                       aria-label="Dismiss meeting"
