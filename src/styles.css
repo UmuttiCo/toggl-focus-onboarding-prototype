@@ -1270,3 +1270,15 @@ input:focus-visible {
   color: var(--magenta);
   padding: 4px 0;
 }
+
+/* what the inference deliberately left out */
+.cf-leftout {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  background: var(--canvas);
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 2px 0 0;
+  text-align: center;
+}

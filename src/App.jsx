@@ -434,6 +434,10 @@ function ClientsStep({ connected, clients, setClients, projName, setProjName, on
             )}
           </div>
         ))}
+        <p className="cf-leftout">
+          17 other domains appeared only once or twice. One meeting is not a client, so nothing was
+          created for them. New one-off meetings show up for review after setup.
+        </p>
         <p className="cf-note">Guessed from attendee domains and recurring titles. Edit anything.</p>
         <div className="ob-actions">
           <button className="btn-primary" disabled={active === 0} onClick={onNext}>
