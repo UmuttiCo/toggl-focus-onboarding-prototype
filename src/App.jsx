@@ -618,20 +618,7 @@ export default function App() {
           <button
             className={`play-btn ${timerOn ? "stop" : ""}`}
             aria-label={timerOn ? "Stop timer" : "Start timer"}
-            onClick={() => {
-              if (timerOn) {
-                const secs = timerSec;
-                const earned = rate ? (secs / 3600) * rate : null;
-                setToast({
-                  title: `${fmtTimer(secs)} logged · Acme standup`,
-                  body: `Counts toward Acme${
-                    earned !== null ? `, $${earned < 1 ? earned.toFixed(2) : Math.round(earned)} at $${rate}/h` : ""
-                  }. Tomorrow morning this shows in your recap.`,
-                });
-                setTimerSec(0);
-              }
-              setTimerOn((v) => !v);
-            }}
+            onClick={() => setTimerOn((v) => !v)}
           >
             {timerOn ? I.stop : I.play}
           </button>
