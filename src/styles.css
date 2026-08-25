@@ -1086,9 +1086,8 @@ input:focus-visible {
 .toast b { display: block; margin-bottom: 2px; }
 
 @media (max-width: 1000px) {
-  .content { grid-template-columns: 1fr; }
-  .panel { display: none; }
-  .content .panel.force { display: flex; position: fixed; inset: auto 0 0 0; max-height: 60vh; border-top: 1px solid var(--line); }
+  .content { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 45vh); }
+  .panel { border-left: none; border-top: 1px solid var(--line); }
 }
 
 /* edit affordance on client names */

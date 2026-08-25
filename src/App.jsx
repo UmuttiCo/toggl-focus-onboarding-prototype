@@ -175,7 +175,7 @@ function UseCaseStep({ value, onChange, onNext }) {
 
 /* ---------- step 2: calendar ---------- */
 
-function CalendarStep({ state, onConnect, onBack, onSkip, onNext }) {
+function CalendarStep({ state, provider, onConnect, onBack, onSkip, onNext }) {
   return (
     <ObPage>
       <ObCard step={2} onBack={onBack} onSkip={state === "idle" ? onSkip : null}>
@@ -187,31 +187,37 @@ function CalendarStep({ state, onConnect, onBack, onSkip, onNext }) {
           <div className="spinner" role="status" aria-label="Connecting" />
         ) : (
           <>
-            <div className={`conn-row ${state === "connected" ? "connected" : ""}`}>
+            <div className={`conn-row ${state === "connected" && provider === "google" ? "connected" : ""}`}>
               <span className="conn-logo g">31</span>
               <span className="conn-text">
                 <b>Google Calendar</b>
-                {state === "connected" ? (
+                {state === "connected" && provider === "google" ? (
                   <span className="ok">✓ Connected · 3 months of history found</span>
                 ) : (
                   <span>Import your meetings so they turn into tracked time</span>
                 )}
               </span>
-              {state !== "connected" && (
-                <button className="conn-btn" onClick={onConnect}>
+              {!(state === "connected" && provider === "google") && (
+                <button className="conn-btn" onClick={() => onConnect("google")}>
                   Connect
                 </button>
               )}
             </div>
-            <div className="conn-row">
+            <div className={`conn-row ${state === "connected" && provider === "outlook" ? "connected" : ""}`}>
               <span className="conn-logo o">O</span>
               <span className="conn-text">
                 <b>Microsoft Outlook</b>
-                <span>Import your meetings so they turn into tracked time</span>
+                {state === "connected" && provider === "outlook" ? (
+                  <span className="ok">✓ Connected · 3 months of history found</span>
+                ) : (
+                  <span>Import your meetings so they turn into tracked time</span>
+                )}
               </span>
-              <button className="conn-btn" onClick={onConnect}>
-                Connect
-              </button>
+              {!(state === "connected" && provider === "outlook") && (
+                <button className="conn-btn" onClick={() => onConnect("outlook")}>
+                  Connect
+                </button>
+              )}
             </div>
             <div className="conn-toggle-row">
               <span>Auto-track calendar events</span>
@@ -233,7 +239,7 @@ function CalendarStep({ state, onConnect, onBack, onSkip, onNext }) {
 
 /* ---------- step 3: clients found (or typed project on skip path) ---------- */
 
-function ClientsStep({ connected, clients, setClients, projName, setProjName, onBack, onNext }) {
+function ClientsStep({ connected, clients, setClients, projName, setProjName, onBack, onNext, onMerge }) {
   const [expanded, setExpanded] = useState(null);
   if (!connected) {
     return (
@@ -282,6 +288,7 @@ function ClientsStep({ connected, clients, setClients, projName, setProjName, on
 
   const mergeInto = (fromId, toId) => {
     if (!toId || toId === fromId) return;
+    onMerge(fromId, toId);
     const from = clients.find((c) => c.id === fromId);
     setClients(
       clients
@@ -422,7 +429,7 @@ function ClientsStep({ connected, clients, setClients, projName, setProjName, on
                   >
                     <option value="">Merge into…</option>
                     {clients
-                      .filter((o) => o.id !== c.id)
+                      .filter((o) => o.id !== c.id && o.enabled)
                       .map((o) => (
                         <option key={o.id} value={o.id}>
                           {o.label}
@@ -533,6 +540,7 @@ export default function App() {
   const [step, setStep] = useState("usecase");
   const [useCase, setUseCase] = useState(null);
   const [calState, setCalState] = useState("idle"); // idle | connecting | connected | skipped
+  const [calProvider, setCalProvider] = useState(null);
   const [clients, setClients] = useState(
     HISTORY_CLIENTS.map((c) => ({ ...c, enabled: !c.dormant }))
   );
@@ -551,6 +559,7 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [newProjFor, setNewProjFor] = useState(null);
   const [newProjName, setNewProjName] = useState("");
+  const [mergeMap, setMergeMap] = useState({});
   const [timerOn, setTimerOn] = useState(false);
   const [timerSec, setTimerSec] = useState(0);
   const timerRef = useRef(null);
@@ -594,7 +603,16 @@ export default function App() {
   }, [step, calState]);
 
   /* ----- derived ----- */
-  const effClient = (m) => overrides[m.id] !== undefined ? overrides[m.id] : m.clientId;
+  const effClient = (m) => {
+    let cid = overrides[m.id] !== undefined ? overrides[m.id] : m.clientId;
+    let hops = 0;
+    while (cid && mergeMap[cid] && hops < 10) {
+      cid = mergeMap[cid];
+      hops += 1;
+    }
+    return cid;
+  };
+  const labelOf = (c) => (c && c.label && c.label.trim()) || "Untitled";
   const activeClients = clients.filter((c) => c.enabled);
   const clientById = Object.fromEntries(clients.map((c) => [c.id, c]));
 
@@ -613,7 +631,7 @@ export default function App() {
     return activeClients
       .map((c) => ({
         key: c.id,
-        name: c.label,
+        name: (c.label && c.label.trim()) || "Untitled",
         kind: c.billable ? "client" : "internal",
         meetings: attributed.filter((m) => effClient(m) === c.id),
       }))
@@ -654,7 +672,7 @@ export default function App() {
     setWeekLogged(true);
     setToast({
       title: `${fmtHours(loggedH)} logged · ${fmtHours(plannedH)} planned`,
-      body: "Reports updated. Nothing is logged before it happens, and nothing was invented.",
+      body: "Nothing is logged before it happens, and nothing was invented.",
     });
   };
 
@@ -666,12 +684,14 @@ export default function App() {
     return (
       <CalendarStep
         state={calState}
+        provider={calProvider}
         onBack={() => setStep("usecase")}
         onSkip={() => {
           setCalState("skipped");
           setStep("clients");
         }}
-        onConnect={() => {
+        onConnect={(p) => {
+          setCalProvider(p);
           setCalState("connecting");
           setTimeout(() => setCalState("connected"), 900);
         }}
@@ -689,6 +709,7 @@ export default function App() {
         setProjName={setProjName}
         onBack={() => setStep("calendar")}
         onNext={() => setStep("setup")}
+        onMerge={(fromId, toId) => setMergeMap((prev) => ({ ...prev, [fromId]: toId }))}
       />
     );
 
@@ -720,6 +741,20 @@ export default function App() {
     : null;
   const todayMeetings = attributed.filter((m) => m.day === 1);
   const nextBlock = todayMeetings.find((m) => m.start >= nowHour);
+  const fmtClock = (h) => {
+    const H = Math.floor(h);
+    const M = Math.round((h - H) * 60);
+    return `${H}:${String(M).padStart(2, "0")}`;
+  };
+  const minsUntilNext = nextBlock ? Math.max(1, Math.round((nextBlock.start - nowHour) * 60)) : null;
+  const topClient = (() => {
+    let best = null, bestH = 0;
+    for (const c of activeClients) {
+      const h = attributed.filter((m) => effClient(m) === c.id).reduce((s, m) => s + meetingHours(m), 0);
+      if (h > bestH) { bestH = h; best = c; }
+    }
+    return best;
+  })();
 
   const showPanel = connected && !isDay2;
   const gridMeetings = connected ? liveMeetings : [];
@@ -772,7 +807,7 @@ export default function App() {
         </div>
 
         {/* strips */}
-        {!isDay2 && !stripGone && connected && !weekLogged && (
+        {!isDay2 && !stripGone && connected && !weekLogged && liveMeetings.length > 0 && (
           <div className="strip">
             <span>
               <b>We found {liveMeetings.length} meetings on your calendar this week,</b>{" "}
@@ -790,9 +825,9 @@ export default function App() {
               <b>
                 {fmtHours(loggedH)} logged, {fmtHours(plannedH)} planned.
               </b>{" "}
-              Reports went from 0h to {fmtHours(loggedH)}
-              {loggedMoney !== null && <> and ${Math.round(loggedMoney).toLocaleString()}</>}. The
-              rest logs itself as each meeting ends.
+              {fmtHours(loggedH)} is logged
+              {loggedMoney !== null && <>, worth ${Math.round(loggedMoney).toLocaleString()}</>}, and
+              the rest logs itself as each meeting ends.
             </span>
             <button className="x" aria-label="Dismiss" onClick={() => setStripGone(true)}>
               ✕
@@ -814,7 +849,7 @@ export default function App() {
           <div className="d2strip">
             <div className="stat">
               <b>{fmtHours(monHours)}</b>
-              <span>tracked yesterday</span>
+              <span>logged yesterday</span>
             </div>
             {monMoney !== null && (
               <>
@@ -825,15 +860,19 @@ export default function App() {
                 </div>
               </>
             )}
-            <div className="divider" />
-            <div className="stat">
-              <b>Acme</b>
-              <span>most tracked client this week</span>
-            </div>
+            {topClient && (
+              <>
+                <div className="divider" />
+                <div className="stat">
+                  <b>{labelOf(topClient)}</b>
+                  <span>most logged client this week</span>
+                </div>
+              </>
+            )}
             <div className="divider" />
             <span style={{ color: "var(--ink-2)", fontSize: 13 }}>
               {nextBlock
-                ? `Your first block starts in 20 minutes: ${nextBlock.title}`
+                ? `Your first block starts in ${minsUntilNext} minutes: ${nextBlock.title}`
                 : "No more meetings today."}
             </span>
           </div>
@@ -854,7 +893,7 @@ export default function App() {
                       <span className="lbl">{d.label}</span>
                       <br />
                       <span className={`sum ${lg + pl > 0 ? "live" : ""}`}>
-                        {lg > 0 ? fmtHours(lg) : "–"} / {pl > 0 ? fmtHours(pl) : "–"}
+                        {lg > 0 ? fmtHours(lg) : "-"} / {pl > 0 ? fmtHours(pl) : "-"}
                       </span>
                     </span>
                   </div>
@@ -913,7 +952,7 @@ export default function App() {
                         >
                           {!counted && I.g}
                           <b>{m.title}</b>
-                          {counted && <span className="proj">{c.label}</span>}
+                          {counted && <span className="proj">{labelOf(c)}</span>}
                           <span className="dur">{fmtHours(meetingHours(m))}</span>
                         </div>
                       );
@@ -951,7 +990,7 @@ export default function App() {
                     {groups.length === 0 && unmatched.length === 0 ? (
                       <div className="empty-log">
                         <b>Nothing left to log</b>
-                        You dismissed everything. Track your first entry with the timer above, or
+                        You dismissed everything. Log your first entry with the timer above, or
                         press D to see day two.
                       </div>
                     ) : (
@@ -1149,7 +1188,7 @@ export default function App() {
                           .filter((x) => x.h > 0)
                           .map(({ c, h }) => (
                             <div key={c.id} className="sumline">
-                              <b>{c.label}</b>
+                              <b>{labelOf(c)}</b>
                               <span>
                                 {fmtHours(h)}
                                 {rate && c.billable && (
@@ -1163,7 +1202,7 @@ export default function App() {
                           ))}
                       </div>
                     </div>
-                    {!rate && !rateHidden && (
+                    {!rate && !rateHidden && totalH > 0 && (
                       <div className="ratecard">
                         <b>What is an hour of your work worth?</b>
                         <p>
@@ -1231,8 +1270,8 @@ export default function App() {
                     <div className="nb-main">
                       <b>{nextBlock.title}</b>
                       <span>
-                        10:00 · {fmtHours(meetingHours(nextBlock))} ·{" "}
-                        {clientById[effClient(nextBlock)]?.label || "Unassigned"}
+                        {fmtClock(nextBlock.start)} · {fmtHours(meetingHours(nextBlock))} ·{" "}
+                        {labelOf(clientById[effClient(nextBlock)]) }
                       </span>
                     </div>
                     <button
@@ -1250,15 +1289,14 @@ export default function App() {
                     <span className="t">{m.title}</span>
                     <span className="d">{fmtHours(meetingHours(m))}</span>
                     <span className="d" style={{ color: "var(--magenta)", fontWeight: 700 }}>
-                      {clientById[effClient(m)]?.label}
+                      {labelOf(clientById[effClient(m)])}
                     </span>
                   </div>
                 ))}
                 <div className="sumcard" style={{ marginTop: 14 }}>
                   <div className="big">{fmtHours(monHours)}</div>
                   <div className="sub">
-                    tracked yesterday{monMoney !== null && <> · ${Math.round(monMoney).toLocaleString()} earned</>}.
-                    This number is why you opened the app today.
+                    logged yesterday{monMoney !== null && <> · ${Math.round(monMoney).toLocaleString()} earned</>}.
                   </div>
                 </div>
               </div>
